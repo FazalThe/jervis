@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fixture Form</title>
+  </head>
+  <body>
+    <header><h1>Contact Us</h1></header>
+    <nav aria-label="Main navigation">
+      <a href="#home">Home</a>
+      <a href="#about">About</a>
+    </nav>
+    <main>
+      <form id="contact" action="#" method="get">
+        <h2>Send a message</h2>
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" placeholder="Your name" />
+        <label for="topic">Topic</label>
+        <select id="topic" name="topic">
+          <option value="">Choose a topic</option>
+          <option value="sales">Sales</option>
+          <option value="support">Support</option>
+          <option value="billing">Billing</option>
+        </select>
+        <label><input id="news" name="news" type="checkbox" /> Subscribe to newsletter</label>
+        <button id="submit" type="submit">Send message</button>
+        <button id="cancel" type="button">Cancel</button>
+      </form>
+    </main>
+    <footer><p>Fixture footer text</p></footer>
+    <script>
+      document.getElementById("contact").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const status = document.createElement("p");
+        status.id = "status";
+        status.textContent = "submitted";
+        document.querySelector("main").appendChild(status);
+      });
+    </script>
+  </body>
+</html>

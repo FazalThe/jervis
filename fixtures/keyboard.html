@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fixture Keyboard</title>
+  </head>
+  <body>
+    <h1>Keyboard echo</h1>
+    <div id="last-key" aria-live="polite">none</div>
+    <div id="log"></div>
+    <script>
+      const last = document.getElementById("last-key");
+      const log = document.getElementById("log");
+      window.addEventListener("keydown", (event) => {
+        last.textContent = event.key;
+        const entry = document.createElement("div");
+        entry.textContent = `down:${event.key}`;
+        log.appendChild(entry);
+        if (log.children.length > 20) log.removeChild(log.firstChild);
+      });
+    </script>
+  </body>
+</html>

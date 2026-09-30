@@ -6,7 +6,7 @@ async function main() {
 
   await agent.run({
     startUrl: "https://search.brave.com/?lang=en-in",
-    goal: "go to a tetris program, and play and win it",
+    goal: "Find the best smartphones udner 10k available in India",
     maxSteps: 50,
     headless: false,
   });
