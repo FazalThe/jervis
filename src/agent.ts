@@ -57,9 +57,13 @@ export class JevAgent {
     console.log(`\ngoal: "${config.goal}"`);
     console.log(`launching browser to: ${config.startUrl}`);
 
-    await this.browser.launch(config.headless ?? true);
+    let browserLaunched = false;
 
     try {
+
+      await this.browser.launch(config.headless ?? true);
+      browserLaunched = true;
+      
       await this.browser.goto(config.startUrl);
 
       const start = Date.now();
@@ -157,8 +161,10 @@ export class JevAgent {
         reason: "max steps reached without conclusion"
       };
     } finally {
-      console.log("shutting down browser...");
-      await this.browser.close();
+      if (browserLaunched) {
+        console.log("shutting down browser...");
+        await this.browser.close();
+      }
     }
   }
 
