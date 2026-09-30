@@ -12,23 +12,33 @@ export function startTelegramBot(agent: JevAgent) {
     const bot = new Bot(token);
 
     bot.on("message:text", async (ctx) => {
-        const instruction = ctx.message.text;
+    const instruction = ctx.message.text;
 
-        console.log("Received:", instruction);
+    console.log("Received:", instruction);
 
-        try {
-            await agent.run({
-                startUrl: "https://search.brave.com/?lang=en-in",
-                goal: instruction,
-                maxSteps: 50,
-                headless: false,
-            });
+    try {
+        const result = await agent.run({
+        startUrl: "https://search.brave.com/?lang=en-in",
+        goal: instruction,
+        maxSteps: 50,
+        headless: false,
+        });
 
-            await ctx.reply("Finished.");
-        } catch (error) {
-            console.error("Agent error:", error);
-            await ctx.reply("JEV encountered an error.");
+        if (result.status === "success") {
+        await ctx.reply(result.answer);
+        return;
         }
+
+        await ctx.reply(
+        `JEV couldn't complete the task.\n\n${result.reason}`,
+        );
+    } catch (error) {
+        console.error("Agent error:", error);
+
+        await ctx.reply(
+        "An unexpected error occurred while running JEV.",
+        );
+    }
     });
 
     bot.start({

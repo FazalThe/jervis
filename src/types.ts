@@ -72,3 +72,17 @@ export interface StepRecord {
   hash: string;
   error?: string;
 }
+
+export type AgentResult =
+  | {
+      status: "success";
+      answer: string;
+    }
+  | {
+      status: "failed";
+      reason: string;
+    }
+  | {
+      status: "timeout";
+      reason: string;
+    };
