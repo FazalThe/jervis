@@ -6,7 +6,7 @@ async function main() {
 
   await agent.run({
     startUrl: "https://search.brave.com/?lang=en-in",
-    goal: "Find the best smartphones udner 10k available in India",
+    goal: "Find the best smartphones under 10k available in India",
     maxSteps: 50,
     headless: false,
   });

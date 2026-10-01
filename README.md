@@ -1,8 +1,10 @@
-# jervis
+# Jervis
 
-A browser agent that navigates like a human. It perceives a page as a structured
-model (text + a registry of actionable elements), drives real mouse, keyboard,
-scroll, tab, and frame input, and asks Jev to choose the next action each step.
+A browser agent that navigates the web like a human.
+
+Jervis perceives pages as a structured model of text and actionable elements, then uses real mouse, keyboard, scroll, tab, and frame input to interact with them. Jev decides what to do next at each step. A lightweight model handles the user-facing layer, turning user input into initial Jervis instructions and turning the agent's result into a final answer.
+
+Instructions and results can be sent through a Telegram bot.
 
 ## Install
 
@@ -12,26 +14,54 @@ bun install
 
 ## Configuration
 
-Copy `.env` and set:
+Create a `.env` file in the project root:
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `OPENROUTER_API_KEY` | yes | Used by both the TypeSafe client and helper calls. |
-| `JERVIS_HELPER_MODEL` | no | Overrides the helper model (default `deepseek/deepseek-v4.1-flash`). |
-| `JERVIS_PLANNER_MODEL` | no | Overrides the planner model (default `typesafe/jev-1.13`). |
+| Variable               | Required | Description                                               |
+| ---------------------- | :------: | --------------------------------------------------------- |
+| `OPENROUTER_API_KEY`   |  **Yes** | OpenRouter API key used by the planner and helper model.  |
+| `TELEGRAM_BOT_TOKEN`   |  **Yes** | Token for connecting Jervis to your Telegram bot.         |
+| `JERVIS_HELPER_MODEL`  |    No    | Helper model. Defaults to `deepseek/deepseek-v4.1-flash`. |
+| `JERVIS_PLANNER_MODEL` |    No    | Planner model. Defaults to `typesafe/jev-1.13`.           |
+
+### Example
+
+```env
+OPENROUTER_API_KEY=your_openrouter_api_key
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+
+# Optional
+JERVIS_HELPER_MODEL=deepseek/deepseek-v4.1-flash
+JERVIS_PLANNER_MODEL=typesafe/jev-1.13
+```
+
+### Telegram
+
+Create a bot through [@BotFather](https://t.me/BotFather):
+
+1. Send `/newbot`.
+2. Follow the prompts.
+3. Copy the token and set it as `TELEGRAM_BOT_TOKEN`.
 
 ## Usage
 
+Start Jervis with:
+
 ```bash
-bun run test-browser.ts     # page info + text smoke
-bun run test-dist.ts        # interactive element smoke
-bun run test-jev.ts         # raw systemOne smoke
-bun run test-loop.ts        # live navigation smoke (Hacker News)
-bun run test-wiki.ts        # live end-to-end run
-bun run test-perception.ts  # deterministic perception test (no API key)
+bun run index.ts
 ```
 
-`JevAgent` options:
+The repository also includes several test scripts:
+
+```bash
+bun run test-browser.ts       # page info + text
+bun run test-dist.ts          # interactive elements
+bun run test-jev.ts           # raw Jev call
+bun run test-loop.ts          # live navigation (Hacker News)
+bun run test-wiki.ts          # live end-to-end run
+bun run test-perception.ts    # deterministic perception test
+```
+
+You can also run the agent directly:
 
 ```ts
 await agent.run({
@@ -45,27 +75,22 @@ await agent.run({
 
 ## How it works
 
-- **Perception.** Each tick waits for the DOM to settle, then builds a
-  token-budgeted page model (`src/perception.ts`): URL/title, a registry of
-  interactive elements stamped with `data-jev-id` (`el_<n>` in the main frame,
-  `f<frame>_el_<n>` in iframes), headings/landmarks, dialogs, scrollable
-  regions, and truncated visible text.
-- **Decision.** Jev picks the next action from a closed `choice` set over those
-  element ids plus meta-actions (`act_scroll`, `act_press_key`, `act_back`,
-  `act_wait`, `act_done`, `act_fail`) and a `noul` done check. Parameterized
-  values (search text, select option, scroll direction, key) are resolved by the
-  helper model, never free-form text into `choice`.
-- **Guardrails.** Element actions that produce no page change, or that are picked
-  twice on the same URL, are hidden from the choice set to break no-op loops.
-  Clicks fall back from real mouse input to a DOM-dispatched click when pointer
-  interception or animations block Playwright's actionability wait. Popups are
-  followed and iframes are handled transparently.
+* **Perception** — Waits for the page to settle, then builds a token-budgeted page model containing the URL, title, visible text, headings, landmarks, dialogs, scrollable regions, and interactive elements.
+
+* **Decision** — Jev chooses the next action from a fixed set of element IDs and meta-actions such as scrolling, key presses, waiting, going back, finishing, or failing. Parameter values such as search text and select options are resolved separately by the helper model.
+
+* **Guardrails** — Repeated or ineffective actions are removed from the available choices to prevent no-op loops. Clicks normally use real mouse input, with a DOM click fallback when Playwright's actionability checks are blocked by things like animations or pointer interception. Popups and iframes are handled as part of the browser layer.
 
 ## Layout
 
-- `src/browser.ts` — Playwright wrapper: tabs/popups, waits, frames, dialogs, full input surface.
-- `src/perception.ts` — structured page model + interactive-element registry.
-- `src/agent.ts` — planner loop, memory/guardrails, meta-actions.
-- `src/llm.ts` — helper LLM calls (field text, option picking, answer extraction).
-- `src/types.ts` — shared action/perception types.
-- `fixtures/` — local pages for deterministic tests.
+```text
+src/
+├── browser.ts       # Playwright wrapper and browser input
+├── perception.ts    # Page model and element registry
+├── agent.ts         # Agent loop, memory and guardrails
+├── llm.ts           # Helper model calls
+├── types.ts         # Shared types
+└── tgbot.ts         # Telegram interface
+
+fixtures/             # Local pages for deterministic tests
+```
